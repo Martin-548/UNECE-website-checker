@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UNECE R155 / R156 Requirements Hub</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Legislative requirements hub</p>
+          <h1>UNECE R155 / R156</h1>
+        </div>
+        <div class="topbar-meta">
+          <span class="badge">Prototype</span>
+          <span class="status-dot"></span>
+          <span>Working view</span>
+        </div>
+      </header>
+
+      <nav class="tabs" aria-label="Main navigation">
+        <button class="tab active" data-target="requirements">Requirements</button>
+        <button class="tab" data-target="sources">Sources</button>
+        <button class="tab" data-target="timeline">Changes</button>
+        <button class="tab" data-target="watchdog">Watchdog</button>
+        <button class="tab" data-target="checklist">Checklist</button>
+      </nav>
+
+      <main>
+        <section id="requirements" class="panel active">
+          <div class="panel-header">
+            <div>
+              <h2>Requirement catalog</h2>
+              <p>Search, filter, and export the current catalogue.</p>
+            </div>
+            <button id="exportCsv" class="primary-btn">Export CSV</button>
+          </div>
+
+          <div class="toolbar">
+            <label class="field search-field">
+              <span>Search</span>
+              <input id="searchInput" type="search" placeholder="Search requirement text or ID" />
+            </label>
+
+            <label class="field">
+              <span>Regulation</span>
+              <select id="regulationFilter">
+                <option value="All">All</option>
+                <option value="R155">R155</option>
+                <option value="R156">R156</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Category</span>
+              <select id="categoryFilter">
+                <option value="All">All</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Regulation</th>
+                  <th>Category</th>
+                  <th>Requirement</th>
+                  <th>Reference</th>
+                  <th>Evidence</th>
+                </tr>
+              </thead>
+              <tbody id="requirementsTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="sources" class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Official sources</h2>
+              <p>Primary references for implementation and review.</p>
+            </div>
+          </div>
+
+          <div id="sourcesList" class="source-grid"></div>
+        </section>
+
+        <section id="timeline" class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Legislative timeline</h2>
+              <p>Key milestones and changes related to R155 / R156.</p>
+            </div>
+          </div>
+
+          <div id="timelineList" class="timeline"></div>
+        </section>
+
+        <section id="watchdog" class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Watchdog / notifications</h2>
+              <p>Track selected sources and record manual checks.</p>
+            </div>
+          </div>
+
+          <div class="watchdog-grid">
+            <div class="card">
+              <h3>Monitored sources</h3>
+              <div id="watchdogSources" class="stack-list"></div>
+            </div>
+
+            <div class="card">
+              <h3>Manual check</h3>
+              <label class="field">
+                <span>Email</span>
+                <input id="emailInput" type="email" placeholder="name@company.com" />
+              </label>
+              <button id="runCheck" class="primary-btn">Run check</button>
+              <div id="lastCheckSummary" class="summary-box muted">No checks run yet.</div>
+            </div>
+          </div>
+        </section>
+
+        <section id="checklist" class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Readiness checklist</h2>
+              <p>Track implementation progress across the programme.</p>
+            </div>
+            <button id="resetChecklist" class="secondary-btn">Reset</button>
+          </div>
+
+          <div class="progress-wrap">
+            <div class="progress-labels">
+              <strong>Completion</strong>
+              <span id="progressText">0%</span>
+            </div>
+            <div class="progress-bar">
+              <div id="progressFill"></div>
+            </div>
+          </div>
+
+          <div id="checklistItems" class="checklist"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

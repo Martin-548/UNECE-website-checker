@@ -1,0 +1,1057 @@
+const memoryStore = {
+  filters: {
+    regulation: 'All',
+    category: 'All',
+    search: ''
+  },
+  selectedSources: new Set(['UNECE', 'EUR-Lex', 'ISO 21434', 'CSMS / SUMS guidance']),
+  email: '',
+  lastCheck: null,
+  checklist: {
+    'R155 governance mapping': false,
+    'R156 data and reporting controls': false,
+    'Risk management process alignment': false,
+    'Supplier and third-party assessment': false,
+    'Monitoring and evidence trail': false,
+    'Executive review and sign-off': false
+  }
+};
+
+const requirements = [
+  { id: 'R155-01', regulation: 'R155', category: 'Governance', requirement: 'Establish a cyber security management system and assign accountability.', reference: 'UNECE R155, Art. 7', evidence: 'Policy, roles, governance records' },
+  { id: 'R155-02', regulation: 'R155', category: 'Risk Management', requirement: 'Identify, assess, and mitigate cyber security risks across the vehicle lifecycle.', reference: 'UNECE R155, Art. 9', evidence: 'Risk register, risk assessment file' },
+  { id: 'R155-03', regulation: 'R155', category: 'Data Management', requirement: 'Protect vehicle-related cyber security data and define retention responsibilities.', reference: 'UNECE R155, Art. 10', evidence: 'Data governance policy, access logs' },
+  { id: 'R155-04', regulation: 'R155', category: 'Supplier Management', requirement: 'Assess supplier and contractor cyber security capabilities and obligations.', reference: 'UNECE R155, Art. 11', evidence: 'Supplier due diligence, contracts' },
+  { id: 'R155-05', regulation: 'R155', category: 'Monitoring', requirement: 'Monitor and respond to cyber security incidents and vulnerabilities.', reference: 'UNECE R155, Art. 12', evidence: 'Incident process, monitoring evidence' },
+  { id: 'R156-01', regulation: 'R156', category: 'Operational Controls', requirement: 'Define processes for software update management and security response.', reference: 'UNECE R156, Art. 6', evidence: 'SUMS procedure, update workflow' },
+  { id: 'R156-02', regulation: 'R156', category: 'Documentation', requirement: 'Maintain records describing the software update management system and responsibilities.', reference: 'UNECE R156, Art. 7', evidence: 'Records, review notes, approvals' },
+  { id: 'R156-03', regulation: 'R156', category: 'Testing / Validation', requirement: 'Validate that software updates and security measures remain effective and traceable.', reference: 'UNECE R156, Art. 9', evidence: 'Test reports, release evidence' },
+  { id: 'R156-04', regulation: 'R156', category: 'Monitoring', requirement: 'Track update-related vulnerabilities, incidents, and corrective actions.', reference: 'UNECE R156, Art. 11', evidence: 'Issue logs, corrective action register' },
+  { id: 'R155-06', regulation: 'R155', category: 'Documentation', requirement: 'Document the CSMS and maintain evidence of implementation review and performance.', reference: 'UNECE R155, Art. 14', evidence: 'Documentation package, management review' },
+  { id: 'R156-05', regulation: 'R156', category: 'Governance', requirement: 'Ensure management oversight of SUMS objectives, changes, and compliance posture.', reference: 'UNECE R156, Art. 14', evidence: 'Board review records, decision logs' }
+];
+
+const officialSources = [
+  { name: 'UNECE', url: 'https://unece.org/transport', type: 'Primary legislation' },
+  { name: 'EUR-Lex', url: 'https://eur-lex.europa.eu/', type: 'Official legal references' },
+  { name: 'ISO 21434', url: 'https://www.iso.org/standard/70918.html', type: 'Cybersecurity standard' },
+  { name: 'CSMS / SUMS guidance', url: 'https://unece.org/info/Transport/Vehicle-Regulations', type: 'Implementation guidance' }
+];
+
+const timelineEntries = [
+  { year: '2021', title: 'UNECE WP.29 cyber security regulations were advanced in regulatory discussions.', description: 'The regulatory direction established the need for vehicle cyber security governance and software update management controls.' },
+  { year: '2022', title: 'R155 and R156 alignment work increased across the automotive ecosystem.', description: 'Implementation programs began to map regulatory obligations to organizational processes, suppliers, and product delivery.' },
+  { year: '2023', title: 'Industry guidance and readiness programs matured.', description: 'Organizations started to define evidence trails, operational controls, and management review structures for compliance programs.' },
+  { year: '2024', title: 'Ongoing monitoring and update programs became a central governance activity.', description: 'Focus shifted toward evidence quality, incident response capability, and formalized change control across software updates.' }
+];
+
+const categorySet = [...new Set(requirements.map(item => item.category))].sort();
+const categoryFilter = document.getElementById('categoryFilter');
+
+categorySet.forEach(category => {
+  const option = document.createElement('option');
+  option.value = category;
+  option.textContent = category;
+  categoryFilter.appendChild(option);
+});
+
+function getVisibleRequirements() {
+  const searchText = memoryStore.filters.search.trim().toLowerCase();
+  return requirements.filter(item => {
+    const matchesRegulation = memoryStore.filters.regulation === 'All' || item.regulation === memoryStore.filters.regulation;
+    const matchesCategory = memoryStore.filters.category === 'All' || item.category === memoryStore.filters.category;
+    const haystack = `${item.id} ${item.requirement} ${item.reference} ${item.evidence}`.toLowerCase();
+    const matchesSearch = !searchText || haystack.includes(searchText);
+    return matchesRegulation && matchesCategory && matchesSearch;
+  });
+}
+
+function renderRequirements() {
+  const rows = getVisibleRequirements();
+  const tbody = document.getElementById('requirementsTableBody');
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="muted">No requirements match the active filters.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(item => `
+    <tr>
+      <td><span class="badge-inline">${item.id}</span></td>
+      <td>${item.regulation}</td>
+      <td>${item.category}</td>
+      <td>${item.requirement}</td>
+      <td>${item.reference}</td>
+      <td>${item.evidence}</td>
+    </tr>
+  `).join('');
+}
+
+function renderSources() {
+  const sourceList = document.getElementById('sourcesList');
+  sourceList.innerHTML = officialSources.map(source => `
+    <article class="card source-item">
+      <div>
+        <strong>${source.name}</strong><br />
+        <small class="muted">${source.type}</small>
+      </div>
+      <a href="${source.url}" target="_blank" rel="noreferrer">Open</a>
+    </article>
+  `).join('');
+}
+
+function renderTimeline() {
+  const timelineList = document.getElementById('timelineList');
+  timelineList.innerHTML = timelineEntries.map(entry => `
+    <div class="timeline-item">
+      <div class="timeline-year">${entry.year}</div>
+      <h3>${entry.title}</h3>
+      <p>${entry.description}</p>
+    </div>
+  `).join('');
+}
+
+function renderWatchdog() {
+  const watchdogSources = document.getElementById('watchdogSources');
+  const items = officialSources.map(source => {
+    const checked = memoryStore.selectedSources.has(source.name);
+    return `
+      <label class="check-toggle">
+        <input type="checkbox" data-source="${source.name}" ${checked ? 'checked' : ''} />
+        <span>${source.name}</span>
+      </label>
+    `;
+  });
+  watchdogSources.innerHTML = items.join('');
+
+  const emailInput = document.getElementById('emailInput');
+  emailInput.value = memoryStore.email;
+
+  if (memoryStore.lastCheck) {
+    const { checkedAt, sources } = memoryStore.lastCheck;
+    document.getElementById('lastCheckSummary').innerHTML = `
+      <strong>Last check:</strong> ${checkedAt}<br />
+      <span>Sources reviewed: ${sources.join(', ') || 'none'}</span>
+    `;
+  } else {
+    document.getElementById('lastCheckSummary').textContent = 'No checks run yet.';
+  }
+}
+
+function renderChecklist() {
+  const checklistContainer = document.getElementById('checklistItems');
+  const keys = Object.keys(memoryStore.checklist);
+  const total = keys.length;
+  const checkedCount = keys.filter(key => memoryStore.checklist[key]).length;
+  const percentage = total ? Math.round((checkedCount / total) * 100) : 0;
+
+  document.getElementById('progressText').textContent = `${percentage}%`;
+  document.getElementById('progressFill').style.width = `${percentage}%`;
+
+  checklistContainer.innerHTML = keys.map(item => {
+    const checked = memoryStore.checklist[item] ? 'checked' : '';
+    const className = memoryStore.checklist[item] ? 'check-item checked' : 'check-item';
+    return `
+      <div class="${className}">
+        <label>
+          <input type="checkbox" data-item="${item}" ${checked} />
+          <span class="task-text">
+            <strong>${item}</strong>
+            <small>Implementation evidence required</small>
+          </span>
+        </label>
+      </div>
+    `;
+  }).join('');
+}
+
+function updateTab(targetId) {
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.target === targetId);
+  });
+
+  document.querySelectorAll('.panel').forEach(panel => {
+    panel.classList.toggle('active', panel.id === targetId);
+  });
+}
+
+function exportCsv() {
+  const rows = getVisibleRequirements();
+  const header = ['ID', 'Regulation', 'Category', 'Requirement', 'Reference', 'Evidence'];
+  const csvRows = [header.join(',')];
+
+  rows.forEach(item => {
+    const cleaned = [
+      item.id,
+      item.regulation,
+      item.category,
+      `"${item.requirement.replace(/"/g, '""')}"`,
+      `"${item.reference.replace(/"/g, '""')}"`,
+      `"${item.evidence.replace(/"/g, '""')}"`
+    ];
+    csvRows.push(cleaned.join(','));
+  });
+
+  const csvContent = csvRows.join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.href = url;
+  link.download = 'unece_requirements_catalog.csv';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function attachEvents() {
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => updateTab(tab.dataset.target));
+  });
+
+  document.getElementById('searchInput').addEventListener('input', (event) => {
+    memoryStore.filters.search = event.target.value;
+    renderRequirements();
+  });
+
+  document.getElementById('regulationFilter').addEventListener('change', (event) => {
+    memoryStore.filters.regulation = event.target.value;
+    renderRequirements();
+  });
+
+  document.getElementById('categoryFilter').addEventListener('change', (event) => {
+    memoryStore.filters.category = event.target.value;
+    renderRequirements();
+  });
+
+  document.getElementById('exportCsv').addEventListener('click', exportCsv);
+
+  document.getElementById('emailInput').addEventListener('input', (event) => {
+    memoryStore.email = event.target.value.trim();
+  });
+
+  document.getElementById('runCheck').addEventListener('click', () => {
+    const selected = [...memoryStore.selectedSources];
+    memoryStore.lastCheck = {
+      checkedAt: new Date().toLocaleString(),
+      sources: selected
+    };
+    renderWatchdog();
+  });
+
+  document.getElementById('resetChecklist').addEventListener('click', () => {
+    Object.keys(memoryStore.checklist).forEach(item => {
+      memoryStore.checklist[item] = false;
+    });
+    renderChecklist();
+  });
+
+  document.addEventListener('change', (event) => {
+    const sourceCheckbox = event.target.closest('input[data-source]');
+    if (sourceCheckbox) {
+      const { source } = sourceCheckbox.dataset;
+      if (sourceCheckbox.checked) {
+        memoryStore.selectedSources.add(source);
+      } else {
+        memoryStore.selectedSources.delete(source);
+      }
+      return;
+    }
+
+    const itemCheckbox = event.target.closest('input[data-item]');
+    if (itemCheckbox) {
+      const { item } = itemCheckbox.dataset;
+      memoryStore.checklist[item] = itemCheckbox.checked;
+      renderChecklist();
+    }
+  });
+}
+
+function init() {
+  renderRequirements();
+  renderSources();
+  renderTimeline();
+  renderWatchdog();
+  renderChecklist();
+  attachEvents();
+}
+
+init();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
